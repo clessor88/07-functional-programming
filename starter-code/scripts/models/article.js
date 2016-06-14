@@ -24,10 +24,10 @@ Article.loadAll = function(dataWePassIn) {
   /* NOTE: the original forEach code should be refactored
      using `.map()` -  since what we are trying to accomplish is the
      transformation of one collection into another. */
-  dataWePassIn.sort(function(a,b) {
+  Article.allArticles = dataWePassIn.sort(function(a,b) {
     return (new Date(b.publishedOn)) - (new Date(a.publishedOn));
-  }).forEach(function(ele) {
-    Article.allArticles.push(new Article(ele));
+  }).map(function(ele) {
+    return new Article(ele);
   });
 };
 
@@ -36,7 +36,7 @@ Article.loadAll = function(dataWePassIn) {
     we might want to call other view functions, and not just initIndexPage();
     Now instead of calling articleView.initIndexPage(), we can call
     whatever we pass in! */
-Article.fetchAll = function() {
+Article.fetchAll = function(nextFunction) {
   if (localStorage.hackerIpsum) {
     $.ajax({
       type: 'HEAD',
@@ -45,16 +45,16 @@ Article.fetchAll = function() {
         var eTag = xhr.getResponseHeader('eTag');
         if (!localStorage.eTag || eTag !== localStorage.eTag) {
           localStorage.eTag = eTag;
-          Article.getAll(); //TODO: pass 'nextFunction' into getAll();
+          Article.getAll(nextFunction); //TODO: pass 'nextFunction' into getAll();
         } else {
           Article.loadAll(JSON.parse(localStorage.hackerIpsum));
           // TODO: Replace the following line with 'nextFunction' and invoke it!
-          articleView.renderIndexPage();
+          articleView.renderIndexPage(nextFunction);
         }
       }
     });
   } else {
-    Article.getAll(); // TODO: pass 'nextFunction' into getAll();
+    Article.getAll(nextFunction); // TODO: pass 'nextFunction' into getAll();
   }
 };
 
@@ -63,6 +63,7 @@ Article.getAll = function(nextFunction) {
     Article.loadAll(responseData);
     localStorage.hackerIpsum = JSON.stringify(responseData);
     // TODO: invoke nextFunction!
+    nextFunction();
   });
 };
 
@@ -74,13 +75,21 @@ Article.numWordsAll = function() {
     return article.body.match(/\w+/g).length;
   })
   .reduce(function(a, b) {
-    // return (TODO: Sum up all the values!)
+    return a + b;
+    // return (TODO: Sum up all the values!) DONE!
   });
 };
 
 /* TODO: Chain together a `map` and a `reduce` call to
           produce an array of *unique* author names. */
 Article.allAuthors = function() {
+  Article.allArticles.map(function(article){
+    return article.author;
+    console.log(article.author);
+  }).reduce(function(uniqueAuthor, author){
+    return uniqueAuthor + author;
+  }, []);
+
   //return       TODO: map our collection
     //return    TODO: return just the author names
 
@@ -93,7 +102,7 @@ Article.numWordsByAuthor = function() {
   /* TODO: Transform each author element into an object with 2 properties:
       One for the author's name, and one for the total number of words across
       the matching articles written by the specified author. */
-  return Article.allAuthors().map(function(a) { // 'a' is a reference to an individual author.
+  return Article.allAuthors().map(function(author) { // 'author' is a reference to an individual author.
     return {
       // name:
       // numWords: someCollection.filter(function(curArticle) {
