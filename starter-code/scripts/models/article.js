@@ -49,7 +49,7 @@ Article.fetchAll = function(nextFunction) {
         } else {
           Article.loadAll(JSON.parse(localStorage.hackerIpsum));
           // TODO: Replace the following line with 'nextFunction' and invoke it!
-          articleView.renderIndexPage(nextFunction);
+          nextFunction();
         }
       }
     });
@@ -82,12 +82,15 @@ Article.numWordsAll = function() {
 
 /* TODO: Chain together a `map` and a `reduce` call to
           produce an array of *unique* author names. */
+
 Article.allAuthors = function() {
-  Article.allArticles.map(function(article){
+  return Article.allArticles.map(function(article){
     return article.author;
-    console.log(article.author);
-  }).reduce(function(uniqueAuthor, author){
-    return uniqueAuthor + author;
+  }).reduce(function(acc, cur){
+    if (!acc.includes(cur)){
+      acc.push(cur);
+    }
+    return acc;
   }, []);
 
   //return       TODO: map our collection
@@ -102,10 +105,22 @@ Article.numWordsByAuthor = function() {
   /* TODO: Transform each author element into an object with 2 properties:
       One for the author's name, and one for the total number of words across
       the matching articles written by the specified author. */
+
   return Article.allAuthors().map(function(author) { // 'author' is a reference to an individual author.
     return {
-      // name:
-      // numWords: someCollection.filter(function(curArticle) {
+
+      name: author,
+      numWords: Article.allArticles.filter(function(curArticle) {
+        return curArticle.author === author;
+      }).map(function(article){
+        return article.body.match(/\w+/g).length;
+      }).reduce(function(a,b){
+        return a + b;
+      })
+
+
+
+
       //  what do we return here to check for matching authors?
       // })
       // .map(...) // use .map to return the author's word count for each article's body (hint: regexp!).
